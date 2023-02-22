@@ -5,7 +5,7 @@ def getCities():
     adjacentCitiesDict = {}
 
     # first add all the cities into a file, make sure we get all the adjacencies proper
-    with open("adjacencies.txt", "r") as adjacenciesFile:
+    with open("data/adjacencies.txt", "r") as adjacenciesFile:
         for line in adjacenciesFile:
             adjacentCities = []
             cities = line.split()
@@ -39,7 +39,7 @@ def getCityCoordinates():
     ## Dict that will hold the city name as the key, and its coordinates as the value
     coordinatesDict = {}
 
-    with open("coordinates.txt", "r") as coordinatesFile:
+    with open("data/coordinates.txt", "r") as coordinatesFile:
         for line in coordinatesFile:
             items = line.split()
 
