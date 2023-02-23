@@ -15,6 +15,9 @@ lineBreak = "-------------------------------------"
 for item in cities.items():
     print(item)
 
+for item in cityCoordinates.items():
+    print(item)
+
 def discoverRoute(startingCity, targetCity):
     ## Whether or not we've reached our goal
     goalReached = False
@@ -71,44 +74,32 @@ def discoverRoute(startingCity, targetCity):
             print("Sorted open list:", openList)
             print("Not quite there yet")
 
-
-
+## compares the given city to the goal city by coordinates
+## and returns the value of the distance between them
 def compareCityCoordinates(e):
-    # print("Goal city:", goalCity)
-    # print("Comparing city:", e)
-
+    ## given as latitude and longitude, which corresponds to
+    ## y, x for euclidean formula
     x1 = float(cityCoordinates[e][1])
     y1 = float(cityCoordinates[e][0])
 
-    # print("x1:", x1)
-    # print("y1", y1)
-
     x2 = float(cityCoordinates[goalCity][1])
     y2 = float(cityCoordinates[goalCity][0])
-
-    # print("x2:", x2)
-    # print("y2", y2)
-
-    ## given as latitude and longitude
-    ## given as y, x for euclidean formula
 
     p1 = [x1, y1]
     p2 = [x2, y2]
 
     distance = math.sqrt( ((p1[0]-p2[0])**2)+((p1[1]-p2[1])**2) )
 
-    ## print("Distance between two is:", distance)
-
     return distance
 
+## sorts the open list based on how close the given city is to
+## the goal city using each cities coordinates
 def sortOpenList(openList):
     openList.sort(key=compareCityCoordinates)
     return openList
 
-
 ## Calls main function
 discoverRoute("Kingman", "Wichita")
 
+# Kingman to wichita
 # salina to wichita works
-# for item in coordinates.items():
-#     print(item)
