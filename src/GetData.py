@@ -19,9 +19,6 @@ def getCities():
 
             adjacentCitiesDict[cityName] = adjacentCities
 
-    # for item in adjacentCitiesDict.items():
-    #     print(item)
-
     ## add all cities to the keys that aren't there
     citiesToAdd = {}
     for item in adjacentCitiesDict.items():
@@ -33,12 +30,6 @@ def getCities():
     ## add those new cities to the main adjacent cities dict
     for item in citiesToAdd.items():
         adjacentCitiesDict[item[0]] = [item[1]]
-
-    # for item in citiesToAdd.items():
-    #     print(item)
-
-    # for item in adjacentCitiesDict.items():
-    #     print(item)
 
     # add all symmetric adjacencies if they don't exist
     for cityToCheck in adjacentCitiesDict.keys():

@@ -1,103 +1,124 @@
 import math
-from GetFrontierItems import getCities, getCityCoordinates
+from GetData import getCities, getCityCoordinates
+from Node import Node
 
-class Node:
-    ## name of node, parent node, children[] nodes, and double weight
-    def __init__(self, name, parent, children, weight):
-        self.name = name
-        self.parent = parent
-        self.child = children
-        self.weight = weight
-
-    def addChild(self, newChild):
-        self.children.append(newChild)
-
-## The list of cities and their adjacencies. city: [list of adjacent cities]
-cities = getCities()
-
-## A dict of city: (coordinates)
-cityCoordinates = getCityCoordinates()
-
-## The cities already explored
-closedList = list()
-
-## The list of nodes
-nodes = list()
-
+cities = getCities() ## The list of cities and their adjacencies { city, [list of adjacent cities] }
+cityCoordinates = getCityCoordinates() ## A dict { city, (coordinates) }
+closedList = list() ## The cities already explored
+nodesDict = dict()## The dict of nodes { cityName, Node }
 lineBreak = "-------------------------------------"
 
-for item in cities.items():
-    print(item)
-
+## Takes a starting and ending city and calculates the route using
+## a best first search algorithm. The heuristic is sorting the frontier
+## cities based on how close they are to the goal
 def discoverRoute(startingCity, targetCity):
-    ## Whether or not we've reached our goal
-    goalReached = False
-    openList = list()
-    global goalCity
-    goalCity = targetCity
+    goalReached = False ## The goal reached state
+    openList = list() ## The queue
+    global goalCity ## The target city
+    goalCity = targetCity ## set the goal city
 
-    print(lineBreak)
-    print("Starting city:", startingCity)
-    print("Goal city:", goalCity)
-    print(lineBreak)
-
-    ## initialize the open list
-    openList = cities[startingCity]
-    currentCity = startingCity
-    closedList.append(currentCity)
-    nodes.append(Node(currentCity, currentCity, list(), 0.0));
-    print("Selected node:", currentCity)
-    print("Open list now:", openList)
-    print("Closed list is now", closedList)
-    printNodes(nodes)
-
-    ## need to select the next city that is closest to our destination
+    openList = cities[startingCity] ## initialize the open list
+    currentCity = startingCity ## select the starting / current city
+    parentNode = currentCity ## set the parent node for the first node in the algorithm
+    closedList.append(currentCity) ## add the city to the list of cities searched
+    nodesDict[currentCity] = Node(currentCity, currentCity, createChildren(currentCity, list()), 0.0) ## add the city to the nodes dict
     sortOpenList(openList)
-    print("Sorted open list:", openList)
 
+    print(lineBreak)
+    print("Starting city:", startingCity, " - Goal City:", goalCity)
+    print(lineBreak)
+    print("Selected node:", currentCity)
+    print(currentCity, "adjacencies: ", cities[currentCity])
+    print("Open list:", openList)
+    print("Closed list", closedList)
+
+    ## main loop
     while(len(openList) != 0 and not goalReached):
         print(lineBreak)
 
-        node = openList[0]
+        node = openList[0] ## Pick the city with the lowest weight
+        openList.remove(node)
+        closedList.append(node) ## Add this city to the searched list
 
-        
+        nodesDict[node] = Node(getParentNode(node, closedList, nodesDict), node, createChildren(node, closedList), distanceBetweenCities(node, parentNode))
 
-        ## add adjacent cities from our selected node to the open list, and to it's children
-        if node in cities.keys():
+        print("Selected node:", node)
+        if node == goalCity:
+            goalReached = True
+            print("We made it!")
+            print("Closed list", closedList)
+            printIdealPathToRoute(nodesDict, startingCity, goalCity)
+            # printNodes(nodes)
+
+        else:
+            print(node, "adjacencies: ", cities[node])
+            # add adjacent cities from our selected node to the open list
             adjacentCities = list()
             for city in cities[node]:
                 adjacentCities.append(city)
                 openList.append(city)
-            nodes.append(Node(node, closedList[len(closedList) - 1], adjacentCities, compareCityCoordinates(node, closedList[len(closedList) - 1]))) 
-
-        print("Selected node:", node)
-
-        if node == goalCity:
-            goalReached = True
-            closedList.append(node)
-            print("We made it!")
-            print("Closed list is now", closedList)
-            printNodes(nodes)
-
-        else:
-            openList.remove(node)
-            closedList.append(node)
 
             for city in openList:
                 if city in closedList:
                     openList.remove(city)
 
-            print("Open list now:", openList)
-            print("Closed list is now", closedList)
-
             sortOpenList(openList)
-            print("Sorted open list:", openList)
-            printNodes(nodes)
-            print("Not quite there yet")
+            print("Open list:", openList)
+            print("Closed list", closedList)
+
+def printNodes(nodesDict):
+    print("Nodes dict:")
+    for value in nodesDict.values():
+        print(value.printNode())
+
+def createChildren(parentCity, closedList):
+    ## need to create a list of nodes to return
+    nodesList = list()
+
+    for selectedCity in cities[parentCity]:
+        if selectedCity not in closedList: ## make sure that we're not adding a city that's already been explored
+            newNode = Node(parentCity, selectedCity, list(), distanceBetweenCities(parentCity, selectedCity))
+            nodesList.append(newNode)
+
+    return nodesList
+
+## start at the ending city node, and print parent nodes until we're at the root
+def printIdealPathToRoute(nodesDict, startingCity, goalCity):
+    finishToStart = list()
+    node = nodesDict[goalCity] ## grab the goal city node
+    finishToStart.append(node.name)
+
+    ## add nodes until we get to the starting city
+    while node.name != startingCity:
+        node = nodesDict[node.parent]
+        finishToStart.append(node.name)
+
+    print(lineBreak)
+    print("Path from", startingCity, "to", goalCity)
+    print()
+
+    count = 0
+    lastNode = Node()
+    for node in reversed(finishToStart):
+        if count < len(finishToStart) - 1:
+            print(node, "->", end=" ")
+        else:
+            lastNode = node
+        count += 1
+    print(lastNode)
+    print()
+
+## gets the parent node for the specified city
+## starts at the end of the closed list and goes up until it finds a node with this
+## city as its child. Get the node itself by its name from the nodes dict
+def getParentNode(city, closedList, nodesDict):
+    for closedListCity in closedList:
+        if city in nodesDict[closedListCity].getChildren():
+            return closedListCity
 
 ## compares the given city to the goal city by coordinates
 ## and returns the value of the distance between them
-def compareCityCoordinatesToGoalCity(e):
+def distanceFromCityToGoalCity(e):
     ## given as latitude and longitude, which corresponds to
     ## y, x for euclidean formula
     x1 = float(cityCoordinates[e][1])
@@ -113,7 +134,8 @@ def compareCityCoordinatesToGoalCity(e):
 
     return distance
 
-def compareCityCoordinates(city1, city2):
+## returns the distance between two cities
+def distanceBetweenCities(city1, city2):
     ## given as latitude and longitude, which corresponds to
     ## y, x for euclidean formula
     x1 = float(cityCoordinates[city1][1])
@@ -132,19 +154,11 @@ def compareCityCoordinates(city1, city2):
 ## sorts the open list based on how close the given city is to
 ## the goal city using each cities coordinates
 def sortOpenList(openList):
-    openList.sort(key=compareCityCoordinatesToGoalCity)
+    openList.sort(key=distanceFromCityToGoalCity)
     return openList
 
-def printNodes(nodes):
-    print("Nodes:")
-    for item in nodes:
-        print(item.name)
+for city in cities.keys():
+    print(city)
 
 ## Calls main function
-discoverRoute("Argonia", "Pratt")
-
-# Kingman to wichita
-# salina to wichita works
-
-
-    
+discoverRoute("Mulvane", "Cheney")
