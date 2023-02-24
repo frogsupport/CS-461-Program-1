@@ -3,8 +3,8 @@ from GetData import getCities, getCityCoordinates
 from Node import Node
 
 cities = getCities() ## The list of cities and their adjacencies { city, [list of adjacent cities] }
-cityCoordinates = getCityCoordinates() ## A dict { city, (coordinates) }
-closedList = list() ## The cities already explored
+cityCoordinates = getCityCoordinates() ## A dict of cities and their coordinates { city, (coordinates) }
+# closedList = list() ## The cities already explored
 nodesDict = dict()## The dict of nodes { cityName, Node }
 lineBreak = "-------------------------------------"
 
@@ -14,6 +14,7 @@ lineBreak = "-------------------------------------"
 def discoverRoute(startingCity, targetCity):
     goalReached = False ## The goal reached state
     openList = list() ## The queue
+    closedList = list() ## The cities already explored
     global goalCity ## The target city
     goalCity = targetCity ## set the goal city
 
@@ -38,13 +39,16 @@ def discoverRoute(startingCity, targetCity):
 
         node = openList[0] ## Pick the city with the lowest weight
         openList.remove(node)
-        closedList.append(node) ## Add this city to the searched list
+        # closedList = addToClosedList(openList, closedList, node)
+        # if node not in closedList:
+        #     closedList.append(node) ## Add this city to the searched list
 
         nodesDict[node] = Node(getParentNode(node, closedList, nodesDict), node, createChildren(node, closedList), distanceBetweenCities(node, parentNode))
 
         print("Selected node:", node)
         if node == goalCity:
             goalReached = True
+            closedList.append(node) ## Add this city to the searched list
             print("We made it!")
             print("Closed list", closedList)
             printIdealPathToRoute(nodesDict, startingCity, goalCity)
@@ -53,11 +57,13 @@ def discoverRoute(startingCity, targetCity):
         else:
             print(node, "adjacencies: ", cities[node])
             # add adjacent cities from our selected node to the open list
-            adjacentCities = list()
             for city in cities[node]:
-                adjacentCities.append(city)
                 openList.append(city)
+                # openList = addToOpenList(openList, closedList, city)
 
+            closedList.append(node)
+
+            # remove duplicates
             for city in openList:
                 if city in closedList:
                     openList.remove(city)
@@ -157,8 +163,28 @@ def sortOpenList(openList):
     openList.sort(key=distanceFromCityToGoalCity)
     return openList
 
-for city in cities.keys():
-    print(city)
+## Execute the program
+print()
+print()
+executing = True
+while(executing):
 
-## Calls main function
-discoverRoute("Mulvane", "Cheney")
+    print("Which city are you starting from?  ", end="")
+    startCity = input()
+    if startCity not in cityCoordinates.keys():
+        print("Invalid city, please try again\n")
+        continue
+
+    print()
+    print("Which city are you going to?  ", end="")
+    targetCity = input()
+    if targetCity not in cityCoordinates.keys():
+        print("Invalid city, please try again\n")
+
+    else:
+        discoverRoute(startCity, targetCity)
+        print("Enter q to quite, anything else to continue")
+        quitOrNot = input()
+        if quitOrNot.lower() == "q":
+            executing = False
+        
